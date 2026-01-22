@@ -18,6 +18,8 @@ function Home() {
   const isRecognizingRef=useRef(false)
   const synth=window.speechSynthesis
 
+  console.log('Home component loaded, userData:', userData);
+
   const handleLogOut=async ()=>{
     try {
       const result=await axios.get(`${serverUrl}/api/auth/logout`,{withCredentials:true})
@@ -45,17 +47,22 @@ function Home() {
   }
 
   const speak=(text)=>{
+    console.log('Attempting to speak:', text);
     const utterence=new SpeechSynthesisUtterance(text)
     utterence.lang = 'hi-IN';
     const voices =window.speechSynthesis.getVoices()
     const hindiVoice = voices.find(v => v.lang === 'hi-IN');
     if (hindiVoice) {
       utterence.voice = hindiVoice;
+      console.log('Using Hindi voice:', hindiVoice.name);
+    } else {
+      console.log('Hindi voice not found, using default');
     }
 
 
     isSpeakingRef.current=true
     utterence.onend=()=>{
+        console.log('Speech ended');
         setAiText("");
   isSpeakingRef.current = false;
   setTimeout(() => {
@@ -64,39 +71,124 @@ function Home() {
     }
    synth.cancel(); // 🛑 pehle se koi speech ho to band karo
 synth.speak(utterence);
+   console.log('Speech synthesis started');
   }
 
   const handleCommand=(data)=>{
     const {type,userInput,response}=data
+    console.log('Handling command with type:', type, 'response:', response);
       speak(response);
+      console.log('Speaking response:', response);
     
+    // Handle different command types
+    const openUrl = (url) => {
+      console.log('Attempting to open URL:', url);
+      try {
+        const newWindow = window.open(url, '_blank');
+        if (newWindow) {
+          console.log('URL opened successfully in new window');
+        } else {
+          console.log('Popup blocked - trying alternative method');
+          // Try to open in same window as fallback
+          window.location.href = url;
+        }
+      } catch (error) {
+        console.log('Error opening URL:', error);
+        // Fallback to same window
+        window.location.href = url;
+      }
+    };
+
+    if (type === 'google-open') {
+      console.log('Opening Google homepage');
+      openUrl('https://www.google.com');
+    }
     if (type === 'google-search') {
       const query = encodeURIComponent(userInput);
-      window.open(`https://www.google.com/search?q=${query}`, '_blank');
+      console.log('Searching Google for:', userInput, 'Encoded query:', query);
+      const url = `https://www.google.com/search?q=${query}`;
+      console.log('Opening URL:', url);
+      openUrl(url);
+    }
+     if (type === 'youtube-open') {
+      console.log('Opening YouTube homepage');
+      openUrl('https://www.youtube.com');
     }
      if (type === 'calculator-open') {
-  
-      window.open(`https://www.google.com/search?q=calculator`, '_blank');
+      console.log('Opening calculator');
+      openUrl('https://www.google.com/search?q=calculator');
     }
      if (type === "instagram-open") {
-      window.open(`https://www.instagram.com/`, '_blank');
+      console.log('Opening Instagram');
+      openUrl('https://www.instagram.com/');
     }
     if (type ==="facebook-open") {
-      window.open(`https://www.facebook.com/`, '_blank');
+      console.log('Opening Facebook');
+      openUrl('https://www.facebook.com/');
     }
      if (type ==="weather-show") {
-      window.open(`https://www.google.com/search?q=weather`, '_blank');
+      console.log('Showing weather');
+      openUrl('https://www.google.com/search?q=weather');
     }
 
-    if (type === 'youtube-search' || type === 'youtube-play') {
-      const query = encodeURIComponent(userInput);
-      window.open(`https://www.youtube.com/results?search_query=${query}`, '_blank');
+    if (type === 'website-open') {
+      // Try to construct a valid URL from the website name
+      let url = userInput.toLowerCase().trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        // Add https:// if not present
+        url = 'https://' + url;
+        // Try to add .com if no extension
+        if (!url.includes('.')) {
+          url += '.com';
+        }
+      }
+      console.log('Opening general website:', url);
+      openUrl(url);
+    } else if (type === 'calculator') {
+      // Calculator results are just spoken, no action needed
+      console.log('Calculator result:', response);
+    } else if (type === 'navigation') {
+      // Handle browser navigation
+      if (userInput === 'next') {
+        console.log('Navigating forward');
+        window.history.forward();
+      } else if (userInput === 'previous') {
+        console.log('Navigating back');
+        window.history.back();
+      } else if (userInput === 'refresh' || userInput === 'reload') {
+        console.log('Refreshing page');
+        window.location.reload();
+      }
+    } else if (type === 'navigation') {
+      console.log('Navigation command:', userInput);
+      if (userInput === 'next') {
+        // Simulate pressing right arrow key for next page
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', ctrlKey: true }));
+        speak('Going to next page');
+      } else if (userInput === 'previous') {
+        // Simulate pressing left arrow key for previous page
+        document.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', ctrlKey: true }));
+        speak('Going to previous page');
+      } else if (userInput === 'refresh') {
+        // Refresh the current page
+        window.location.reload();
+        speak('Refreshing page');
+      }
     }
 
   }
 
 useEffect(() => {
+  console.log('Setting up speech recognition...');
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  
+  if (!SpeechRecognition) {
+    console.error('Speech recognition not supported in this browser');
+    alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+    return;
+  }
+  
+  console.log('Speech recognition is supported');
   const recognition = new SpeechRecognition();
 
   recognition.continuous = true;
@@ -109,24 +201,30 @@ useEffect(() => {
 
   // Start recognition after 1 second delay only if component still mounted
   const startTimeout = setTimeout(() => {
+    console.log('Attempting to start speech recognition...');
     if (isMounted && !isSpeakingRef.current && !isRecognizingRef.current) {
       try {
         recognition.start();
-        console.log("Recognition requested to start");
+        console.log("Recognition requested to start - SUCCESS");
       } catch (e) {
+        console.error("Recognition start error:", e);
         if (e.name !== "InvalidStateError") {
           console.error(e);
         }
       }
+    } else {
+      console.log('Not starting recognition - conditions not met:', { isMounted, isSpeaking: isSpeakingRef.current, isRecognizing: isRecognizingRef.current });
     }
   }, 1000);
 
   recognition.onstart = () => {
+    console.log('Speech recognition started successfully');
     isRecognizingRef.current = true;
     setListening(true);
   };
 
   recognition.onend = () => {
+    console.log('Speech recognition ended');
     isRecognizingRef.current = false;
     setListening(false);
     if (isMounted && !isSpeakingRef.current) {
@@ -147,6 +245,10 @@ useEffect(() => {
     console.warn("Recognition error:", event.error);
     isRecognizingRef.current = false;
     setListening(false);
+    if (event.error === "not-allowed") {
+      alert("Microphone access is denied. Please allow microphone access in your browser settings to use voice commands.");
+      return;
+    }
     if (event.error !== "aborted" && isMounted && !isSpeakingRef.current) {
       setTimeout(() => {
         if (isMounted) {
@@ -163,16 +265,49 @@ useEffect(() => {
 
   recognition.onresult = async (e) => {
     const transcript = e.results[e.results.length - 1][0].transcript.trim();
-    if (transcript.toLowerCase().includes(userData.assistantName.toLowerCase())) {
+    console.log('Speech result received:', transcript);
+    console.log('Looking for assistant name:', userData?.assistantName?.toLowerCase());
+    
+    // Skip if this is the AI speaking (contains common response phrases)
+    if (transcript.toLowerCase().includes('opening') || 
+        transcript.toLowerCase().includes('searching') ||
+        transcript.toLowerCase().includes('current time') ||
+        transcript.toLowerCase().includes('today is') ||
+        transcript.toLowerCase().includes('sorry') ||
+        transcript.length < 3) {
+      console.log('Skipping AI speech or too short input');
+      return;
+    }
+    
+    // Check if assistant name is mentioned (require at least 3 characters to avoid false positives)
+    const assistantName = userData.assistantName.toLowerCase();
+    if (assistantName.length >= 3 && transcript.toLowerCase().includes(assistantName)) {
+      console.log('Assistant name detected, processing command');
       setAiText("");
       setUserText(transcript);
       recognition.stop();
       isRecognizingRef.current = false;
       setListening(false);
       const data = await getGeminiResponse(transcript);
+      console.log('Received data from API:', data);
       handleCommand(data);
       setAiText(data.response);
       setUserText("");
+    } else if (assistantName.length < 3) {
+      // For short names, be more careful but still allow activation
+      console.log('Short assistant name detected, processing command');
+      setAiText("");
+      setUserText(transcript);
+      recognition.stop();
+      isRecognizingRef.current = false;
+      setListening(false);
+      const data = await getGeminiResponse(transcript);
+      console.log('Received data from API:', data);
+      handleCommand(data);
+      setAiText(data.response);
+      setUserText("");
+    } else {
+      console.log('Assistant name not detected in transcript');
     }
   };
 
@@ -208,8 +343,8 @@ useEffect(() => {
 <h1 className='text-white font-semibold text-[19px]'>History</h1>
 
 <div className='w-full h-[400px] gap-[20px] overflow-y-auto flex flex-col truncate'>
-  {userData.history?.map((his)=>(
-    <div className='text-gray-200 text-[18px] w-full h-[30px]  '>{his}</div>
+  {userData.history?.map((his, index)=>(
+    <div key={index} className='text-gray-200 text-[18px] w-full h-[30px]  '>{his}</div>
   ))}
 
 </div>

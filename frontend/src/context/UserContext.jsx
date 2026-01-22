@@ -2,7 +2,7 @@ import axios from 'axios'
 import React, { createContext, useEffect, useState } from 'react'
 export const userDataContext=createContext()
 function UserContext({children}) {
-    const serverUrl="http://localhost:8000"
+    const serverUrl="http://localhost:8001";
     const [userData,setUserData]=useState(null)
     const [frontendImage,setFrontendImage]=useState(null)
      const [backendImage,setBackendImage]=useState(null)
@@ -19,10 +19,14 @@ function UserContext({children}) {
 
     const getGeminiResponse=async (command)=>{
 try {
+  console.log('Sending command to backend:', command);
   const result=await axios.post(`${serverUrl}/api/user/asktoassistant`,{command},{withCredentials:true})
+  console.log('Backend response:', result.data);
   return result.data
 } catch (error) {
-  console.log(error)
+  console.log('API Error:', error);
+  console.log('Error response:', error.response?.data);
+  return {response: "Sorry, I'm having trouble responding right now.", type: "general"}
 }
     }
 

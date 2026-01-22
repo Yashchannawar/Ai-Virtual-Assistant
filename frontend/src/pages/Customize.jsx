@@ -52,7 +52,7 @@ setFrontendImage(URL.createObjectURL(file))
     </div>
      <input type="file" accept='image/*' ref={inputImage} hidden onChange={handleImage}/>
 </div>
-     {selectedImage && <button className='min-w-[150px] h-[60px] mt-[30px] text-black font-semibold cursor-pointer  bg-white rounded-full text-[19px] ' onClick={()=>navigate("/customize2")}>Next</button>}
+     {selectedImage && <button className='min-w-[100px] h-[60px] mt-[30px] text-black font-semibold cursor-pointer  bg-white rounded-full text-[19px] ' onClick={()=>navigate("/customize2")}>Next</button>}
       
     </div>
   )

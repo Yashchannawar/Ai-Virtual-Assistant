@@ -1,4 +1,7 @@
 import axios from "axios"
+import dotenv from "dotenv"
+dotenv.config()
+
 const geminiResponse = async (command, assistantName, userName) => {
     try {
         const apiUrl = process.env.GEMINI_API_URL
@@ -8,7 +11,7 @@ const geminiResponse = async (command, assistantName, userName) => {
  Your task is to understand the user's natural language input and respond with a JSON object like this:
 
  {
-   "type": "general" | "google-search" | "youtube-search" | "youtube-play" | "get-time" | "get-date" | "get-day" | "get-month"|"calculator-open" | "instagram-open" |"facebook-open" |"weather-show" ,
+   "type": "general" | "google-open" | "google-search" | "youtube-open" | "youtube-search" | "youtube-play" | "get-time" | "get-date" | "get-day" | "get-month"|"calculator-open" | "instagram-open" |"facebook-open" |"weather-show" ,
 
    "userInput": "<original user input>" {only remove your name from userinput if exists} and agar kisi ne google ya youtube pe kuch search karne ko bola hai to userInput me only bo search baala text jaye,
 
@@ -22,7 +25,9 @@ const geminiResponse = async (command, assistantName, userName) => {
 
  Type meanings:
  - "general": if it's a factual or informational question. aur agar koi aisa question puchta hai jiska answer tume pata hai usko bhi general ki category me rakho bas short answer dena
+ - "google-open": if user wants to open Google homepage.
  - "google-search": if user wants to search something on Google .
+ - "youtube-open": if user wants to open YouTube homepage.
  - "youtube-search": if user wants to search something on YouTube.
  - "youtube-play": if user wants to directly play a video or song.
  - "calculator-open": if user wants to  open a calculator .
@@ -51,6 +56,7 @@ const result = await axios.post(apiUrl, {
         return result.data.candidates[0].content.parts[0].text
     } catch (error) {
         console.log(error)
+        return '{"type": "general", "userInput": "error", "response": "Sorry, I am unable to process your request right now."}'
     }
 }
 
