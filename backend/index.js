@@ -6,12 +6,13 @@ import authRouter from "./routes/auth.routes.js"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import userRouter from "./routes/user.routes.js"
+import geminiResponse from "./gemini.js
 
 
 
 const app=express()
 app.use(cors({
-    origin:"https://virtual-assistant-frontend-vvcv.onrender.com",
+    origin:"http://localhost:5173",
     credentials:true
 }))
 const port=process.env.PORT || 5000
