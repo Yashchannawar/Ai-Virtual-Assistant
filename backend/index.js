@@ -6,7 +6,13 @@ import authRouter from "./routes/auth.routes.js"
 import cors from "cors"
 import cookieParser from "cookie-parser"
 import userRouter from "./routes/user.routes.js"
+<<<<<<< HEAD
 import geminiResponse from "./gemini.js"
+=======
+import geminiResponse from "./gemini.js
+
+
+>>>>>>> c1d8e996df813f289dcd62aa885cb286445c2def
 
 const app=express()
 app.use(cors({
